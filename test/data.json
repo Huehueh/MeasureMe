@@ -1,7 +1,22 @@
 {
-    "czarne grube spodenki": {
+    "image files": [
+    {
         "name":"test/20231123_221443.jpg",
         "size":59,
-        "points":[[762, 766], [1590, 669]]
+        "points":[[762, 766], [1590, 669]],
+        "desc":"czarne spodenki"
+    },
+    {
+        "name":"test/20231112_133949.jpg",
+        "size":20,
+        "points":[[180,868], [1034,846]],
+        "desc":"paskowane spodenki"
+    },
+    {
+        "name":"test/IMG_20231127_215724.jpg",
+        "size":48.5,
+        "points":[[3424,1252], [1339,722]],
+        "desc":"zielone spodenki"
     }
+    ]
 }

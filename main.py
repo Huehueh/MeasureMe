@@ -2,15 +2,15 @@ from imutils.perspective import four_point_transform
 import cv2
 import argparse
 import os
-from processing import doImageProcessing
+from processing import *
+import json
 
 
 def load_images_from_folder(folder):
     images = []
     for filename in os.listdir(folder):
-        img = cv2.imread(os.path.join(folder, filename))
-        if img is not None:
-            images.append(img)
+        img = os.path.join(folder, filename)
+        images.append(img)
     return images
 
 
@@ -22,11 +22,20 @@ args = vars(parser.parse_args())
 if args["folder"] is not None:
     images = load_images_from_folder(args["folder"])
 elif args["image"] is not None:
-    print(args["image"])
-    im = cv2.imread(args["image"])
+    im = args["image"]
     images = [im]
 else:
     images = []
 
-for image in images:
-    doImageProcessing(image)
+measureFile = open("test/data.json")
+measureData = json.load(measureFile)
+
+for imageName in images:
+    for data in measureData["image files"]:
+        if data["name"] == imageName:
+            points = data["points"]
+            size = data["size"]
+            image = cv2.imread(imageName)
+            # doImageProcessing(image, points, size)
+            doImageFloodfill(image, points, size)
+            # doCorners(image)
