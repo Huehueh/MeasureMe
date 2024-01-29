@@ -1,5 +1,5 @@
 import math
-
+import cv2
 
 def checkPerpendicular(p1, p2, p3):
     if p2[0] - p1[0] == 0 and p3[0] - p2[0] == 0:
@@ -32,16 +32,16 @@ def checkOrthogonal(p1, p2, p3):
 
 
 def checkRatio(corner, a, b):
-    l1 = math.dist(corner, a)
-    l2 = math.dist(corner, b)
-    if l1 < 200.0 or l2 < 200.0:
+    l1 = int(math.dist(corner, a))
+    l2 = int(math.dist(corner, b))
+    if l1 < 200 or l2 < 200:
         return False
     r1 = l1 / l2
     r2 = l2 / l1
     ratio = max(r1, r2)
     targetRatio = 297 / 210
-    offset = 0.05
-    print(ratio, targetRatio)
+    offset = 0.02 #0.05
+    print("current ratio", ratio, "target ratio", targetRatio)
     return ratio >= (1 - offset) * targetRatio and ratio <= (1 + offset) * targetRatio
 
 
@@ -59,6 +59,20 @@ def checkIfIsA4(contour):
                         print("A4!!!")
                         return points
     return None
+
+
+def drawA4FromThreeCorners(corners, image):
+    if corners is not None and len(corners) == 3:
+        cv2.line(image, corners[0], corners[1], (0, 255, 0), 10)
+        cv2.line(image, corners[0], corners[2], (0, 255, 0), 10)
+
+
+def calculateRatio(corners):
+    if corners is not None and len(corners) == 3:
+        longer_edge = max(
+            math.dist(corners[0], corners[1]), math.dist(corners[0], corners[2])
+        )  # 297mm
+
 
 
 # p1 = (1, 1)

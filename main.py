@@ -4,6 +4,8 @@ import argparse
 import os
 from processing import *
 import json
+from display import threshAndEdges
+from operations import seperateShapes, findPolygons
 
 
 def load_images_from_folder(folder):
@@ -31,11 +33,16 @@ measureFile = open("test/data.json")
 measureData = json.load(measureFile)
 
 for imageName in images:
-    for data in measureData["image files"]:
-        if data["name"] == imageName:
-            points = data["points"]
-            size = data["size"]
-            image = cv2.imread(imageName)
-            # doImageProcessing(image, points, size)
-            doImageFloodfill(image, points, size)
-            # doCorners(image)
+    # for data in measureData["image files"]:
+    #     if data["name"] == imageName:
+    #         points = data["points"]
+    #         size = data["size"]
+    #         image = cv2.imread(imageName)
+    image = cv2.imread(imageName, cv2.IMREAD_COLOR)
+    if image is None:
+        print("NO IMAGE")
+        break
+    threshedImage = threshAndEdges(image)
+    shapesImage = seperateShapes(threshedImage)
+    polygonsImage = findPolygons(shapesImage)
+    cv2.waitKey()

@@ -1,6 +1,9 @@
 import cv2
 import numpy as np
-
+import random
+from utils import rescaleImage
+import random as rng
+from sheet_checker import checkIfIsA4, drawA4FromThreeCorners
 
 def order_points(pts):
     # initialzie a list of coordinates that will be ordered
@@ -54,3 +57,78 @@ def my_four_point_transform(image, pts):
     warped = cv2.warpPerspective(image, M, (image.shape[0] * 2, image.shape[1] * 2))
     # return the warped image
     return warped
+
+
+def findPolygons(image):    
+    if len(image.shape) == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    width, height = image.shape
+    cnts = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+
+    contours = np.zeros((width, height, 3),"uint8")
+    cv2.drawContours(contours, cnts, -1, (0, 255, 0), 3)
+    cv2.imshow("All contours", rescaleImage(25, contours))
+
+    approxImage = np.zeros((width, height, 3),"uint8")
+    for contour in cnts:
+        # Perform contour approximation
+        peri = cv2.arcLength(contour, True)
+        if peri < 100:
+            continue
+        epsilon = 0.02 * peri #0.005
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+            
+        a4corners = checkIfIsA4(approx)
+        if a4corners is not None:
+            cv2.drawContours(approxImage, [approx], -1, (255, 0, 0), 3)
+            cv2.drawContours(approxImage, [contour], -1, (0, 0, 255), 3)
+            drawA4FromThreeCorners(a4corners, approxImage)
+            break
+    cv2.imwrite("result/polygons.png", approxImage)
+    cv2.imshow("A4", rescaleImage(25, approxImage))
+
+    return approxImage
+
+
+def seperateShapes(image):
+    if len(image.shape) == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    width, height = image.shape
+    thresh = width*height/10000
+
+    # Make seperate shapes
+    ret, labels = cv2.connectedComponentsWithAlgorithm(image, 4, cv2.CV_32S, cv2.CCL_DEFAULT)
+    colors = []
+    for k in range(ret):
+        colors.append((random.randint(0,256),random.randint(0,256),random.randint(0,256)))
+
+    # Making histotogram of values
+    values = [0] * ret
+    dst = np.zeros((width, height, 3),"uint8")
+    for i in range(width):
+        for j in range(height):
+            label = labels[i][j]
+            dst[i][j] = colors[label]
+            values[label]+=1
+    # valuesDict = {}
+    # for i in range(len(values)):
+    #     valuesDict[i] = values[i]
+    # valuesDict = dict(sorted(valuesDict.items(), key=lambda x: x[1], reverse=True))
+    
+
+    shapes_image = np.zeros((width, height, 3),"uint8")
+    for i in range(width):
+        for j in range(height):
+            label = labels[i][j]
+            if label > 0: #  0  is te background (I suppose)
+                if values[label] > thresh: # only n shapes from dict?
+                    shapes_image[i][j] = colors[label]
+
+    
+    # cv2.imshow( "all components", rescaleImage(25, dst));
+    cv2.imshow( "shapes", rescaleImage(25, shapes_image));
+    cv2.imwrite("result/shapes.png", shapes_image)
+    
+    return shapes_image
