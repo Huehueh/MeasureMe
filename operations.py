@@ -3,7 +3,8 @@ import numpy as np
 import random
 from utils import rescaleImage
 import random as rng
-from sheet_checker import checkIfIsA4, drawA4FromThreeCorners
+from sheet_checker import checkIfIsA4, checkSize
+from drawing import drawA4FromThreeCorners, drawPoints
 
 def order_points(pts):
     # initialzie a list of coordinates that will be ordered
@@ -59,37 +60,60 @@ def my_four_point_transform(image, pts):
     return warped
 
 
-def findPolygons(image):    
+def findAllContours(image):
+    width, height = image.shape
+    contours = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = contours[0] if len(contours) == 2 else contours[1]
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+    contoursImage = np.zeros((width, height, 3),"uint8")
+    cv2.drawContours(contoursImage, contours, -1, (0, 255, 0), 3)
+    cv2.imshow("All contours", rescaleImage(25, contoursImage))
+    return contours
+
+
+def approximateContour(contour):
+    peri = cv2.arcLength(contour, True)
+    if peri < 100:
+        return None
+    epsilon = 0.005 * peri #0.005
+    approx = cv2.approxPolyDP(contour, epsilon, True)
+    return approx
+
+
+def findA4(image):
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    width, height = image.shape
-    cnts = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-    cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
-
-    contours = np.zeros((width, height, 3),"uint8")
-    cv2.drawContours(contours, cnts, -1, (0, 255, 0), 3)
-    cv2.imshow("All contours", rescaleImage(25, contours))
-
-    approxImage = np.zeros((width, height, 3),"uint8")
-    for contour in cnts:
-        # Perform contour approximation
-        peri = cv2.arcLength(contour, True)
-        if peri < 100:
+    
+    cnts = findAllContours(image)
+    a4candidates = []
+    approximations = []
+    for contour in cnts:        
+        approx = approximateContour(contour)
+        if approx is None:
             continue
-        epsilon = 0.02 * peri #0.005
-        approx = cv2.approxPolyDP(contour, epsilon, True)
-            
-        a4corners = checkIfIsA4(approx)
+        approximations.append(approx)
+        
+        # Check if contour is A4
+        a4corners = checkIfIsA4(approx, image)
         if a4corners is not None:
-            cv2.drawContours(approxImage, [approx], -1, (255, 0, 0), 3)
-            cv2.drawContours(approxImage, [contour], -1, (0, 0, 255), 3)
-            drawA4FromThreeCorners(a4corners, approxImage)
-            break
-    cv2.imwrite("result/polygons.png", approxImage)
-    cv2.imshow("A4", rescaleImage(25, approxImage))
+            a4candidates.append(a4corners)
 
-    return approxImage
+    # drawing contour approximations
+    width, height = image.shape
+    approxImage = np.zeros((width, height, 3),"uint8")
+    cv2.drawContours(approxImage, approximations, -1, (255, 0, 0), 8)  
+    cv2.imshow("Contours approximations", rescaleImage(25, approxImage))
+
+    if len(a4candidates) > 0:
+        # drawing potential A4 corners
+        a4candidates = sorted(a4candidates, key=lambda x: checkSize(x[0], x[1], x[2]), reverse=True)
+        coloredImage = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        for points in a4candidates:
+            drawA4FromThreeCorners(points, coloredImage)
+
+        return a4candidates[0]
+    return None
 
 
 def seperateShapes(image):

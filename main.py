@@ -5,7 +5,9 @@ import os
 from processing import *
 import json
 from display import threshAndEdges
-from operations import seperateShapes, findPolygons
+from operations import seperateShapes, findA4, rescaleImage
+from drawing import drawPoints
+
 
 
 def load_images_from_folder(folder):
@@ -43,6 +45,9 @@ for imageName in images:
         print("NO IMAGE")
         break
     threshedImage = threshAndEdges(image)
-    shapesImage = seperateShapes(threshedImage)
-    polygonsImage = findPolygons(shapesImage)
+    # shapesImage = seperateShapes(threshedImage)
+    a4candidate = findA4(threshedImage)
+    if a4candidate is not None:
+        drawPoints(a4candidate, image, (255, 0, 0))
+        cv2.imshow("Original with A4 candidates", rescaleImage(25, image))
     cv2.waitKey()
