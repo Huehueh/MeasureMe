@@ -75,13 +75,15 @@ def checkWhiteSpace(grayImage, corner, a, b) -> bool:
 def isCorner(contour, index):
     first = len(contour) - 1 if index == 0 else index - 1
     last = 0 if index == len(contour) - 1 else index + 1
-    return checkPerpendicular(contour[first][0], contour[index][0], contour[last][0])
+    return checkPerpendicular(contour[first][0], contour[index][0], contour[last][0]), [contour[first][0].tolist(), contour[index][0].tolist(), contour[last][0].tolist()]
 
 def getAllCorners(contour):
-    corners = []
+    corners = {}
     for i in range(len(contour)):
-        if isCorner(contour, i):
-            corners.append(contour[i][0])
+        corner, points = isCorner(contour, i)
+        if corner:
+            # we need tuple instead od np.array because np.array is not hashable
+            corners[tuple(contour[i][0])] = points
     return corners
 
 def getA4Candidates(corners) -> list:
@@ -105,7 +107,7 @@ def checkIfIsA4(contour, originalImage):
         return None
 
     corners = getAllCorners(contour)
-    candidates = getA4Candidates(corners)
+    candidates = getA4Candidates(list(corners.keys()))
     if len(candidates) > 1:
         candidates = sorted(candidates, key=lambda x: checkWhiteSpace(originalImage, x[0], x[1], x[2]), reverse=True)
     
@@ -116,7 +118,9 @@ def checkIfIsA4(contour, originalImage):
     #         cv2.imshow("candidates", rescaleImage(25, coloredImage))
     #         cv2.waitKey()
     if len(candidates) > 0:
-        return candidates[0]
+        print(f"points: [{corners[candidates[0][0]]}, {corners[candidates[0][1]]}, {corners[candidates[0][2]]}] ")
+        # convert result to np.array as rest of the code needs it
+        return [np.array(x) for x in candidates[0]]
     return None
 
 

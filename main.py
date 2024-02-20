@@ -28,8 +28,6 @@ def draw_circle(event, x, y, flags, param):
             print(f"Zmierzono {length} mm")
             start = None
 
-
-
 def load_images_from_folder(folder):
     images = []
     for filename in os.listdir(folder):

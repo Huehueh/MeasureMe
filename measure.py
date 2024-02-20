@@ -15,7 +15,9 @@ class Ruler:
                 raise ValueError('A4 should have at least three coordinates')
             elif len(a4coordinates) == 3:
                 # print(a4coordinates)
-                a4coordinates.append(self.get_fourth_point(a4coordinates))
+                fourth = self.get_fourth_point(a4coordinates)
+                print(f"fourth point: {fourth}")
+                a4coordinates.append(fourth)
                 # print(a4coordinates)
             self.transformation = transformation
             src = np.array([a4coordinates]).astype(np.float32)
