@@ -1,5 +1,5 @@
 import cv2
-from operations import my_four_point_transform
+from transform import my_four_point_transform
 from sheet_checker import checkIfIsA4
 import math
 import numpy as np
@@ -164,6 +164,7 @@ def doImageFloodfill(image, points, size):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     gray = cv2.equalizeHist(gray)
     cv2.imwrite("temp2/eq.png", gray)
+    print("huheue")
     ret, im, mask, rect = cv2.floodFill(
         gray, mask, seed, color, (3,) * 3, (3,) * 3
     )  # dobry wynik (2,)*3
