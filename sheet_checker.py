@@ -32,7 +32,7 @@ def checkOrthogonal(p1, p2, p3):
         result = [p1, p2, p3]
     # if result is not None:
     #     print("checkOrthogonal", result)
-    return result
+    return result # corner, a, b
 
 
 def checkRatio(corner, a, b):
@@ -84,7 +84,7 @@ def getAllCorners(contour):
             corners.append(contour[i][0])
     return corners
 
-def getA4Candidates(corners):
+def getA4Candidates(corners) -> list:
     cornersCandidates = []
     cornersNum = len(corners)
     for i in range(cornersNum):

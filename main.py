@@ -7,6 +7,26 @@ import json
 from display import threshAndEdges
 from operations import seperateShapes, findA4, rescaleImage
 from drawing import drawPoints
+from measure import Ruler
+
+start = None
+ruler = None
+
+def draw_circle(event, x, y, flags, param):
+    global start, ruler
+    if event == cv2.EVENT_LBUTTONDOWN:        
+        if start == None:
+            start = (x, y)
+            cv2.circle(image, start, 20, (255, 0, 0), -1)
+        else:
+            end = (x, y)
+            cv2.circle(image, end, 20, (255, 0, 0), -1)
+            cv2.line(image, start, end, (255, 0, 0), 4)
+            arr = [start, end]
+
+            length = ruler.measureLength(start, end)
+            print(f"Zmierzono {length} mm")
+            start = None
 
 
 
@@ -47,7 +67,18 @@ for imageName in images:
     threshedImage = threshAndEdges(image)
     # shapesImage = seperateShapes(threshedImage)
     a4candidate = findA4(threshedImage)
+
+    cv2.namedWindow("Image")
+    cv2.setMouseCallback("Image", draw_circle)
     if a4candidate is not None:
         drawPoints(a4candidate, image, (255, 0, 0))
-        cv2.imshow("Original with A4 candidates", rescaleImage(25, image))
-    cv2.waitKey()
+        warped, transformation = my_four_point_transform(image, a4candidate)
+        cv2.imshow("Warped", rescaleImage(25, warped))
+        ruler = Ruler(a4candidate, transformation)
+
+        while(1):
+            cv2.imshow("Image", image)
+            if cv2.waitKey(20) & 0xFF == 27:
+                break
+        cv2.destroyAllWindows()    
+    # cv2.waitKey()
