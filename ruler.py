@@ -13,6 +13,7 @@ class Ruler:
         self.corners_data = a4_data[1]
         if len(self.a4coordinates) == 3:
             self.a4coordinates.append(Ruler.calc_fourth_point_with_lines(self.corners_data))
+        print("a4 coordinates", self.a4coordinates)
         self.transformation = Ruler.my_four_point_transform(self.a4coordinates)
         src = np.array([self.a4coordinates]).astype(np.float32)
         self.a4coordinates = cv2.perspectiveTransform(src, self.transformation)
@@ -167,4 +168,4 @@ class Ruler:
 
         if print_debug:
             print(x, y)
-        return x, y
+        return np.array([x, y], dtype=np.int32)
