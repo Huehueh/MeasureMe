@@ -39,6 +39,8 @@ def load_images_from_folder(folder):
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--folder", required=False, help="folder")
 parser.add_argument("-i", "--image", required=False, help="image file")
+parser.add_argument("-p", "--fourth_point", required=False, help="fourth point calculation method",
+                    choices=["parallels", "lines"], default="lines")
 args = vars(parser.parse_args())
 
 if args["folder"] is not None:
@@ -71,7 +73,7 @@ for imageName in images:
     if a4candidate is not None:
         drawPoints(a4candidate[0], image, (255, 0, 0))
         
-        ruler = Ruler(a4candidate)
+        ruler = Ruler(a4candidate, args["fourth_point"])
         warped = cv2.warpPerspective(image, ruler.transformation, (image.shape[0] * 2, image.shape[1] * 2))
         cv2.imshow("Warped", rescaleImage(25, warped))
 

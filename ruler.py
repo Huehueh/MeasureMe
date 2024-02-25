@@ -8,18 +8,20 @@ class Ruler:
     shorterMm = 210
     transformation = None
 
-    def __init__(self, a4_data:[]):
+    def __init__(self, a4_data:[], fourth_point_method):
         self.a4coordinates = a4_data[0]
         self.corners_data = a4_data[1]
         if len(self.a4coordinates) == 3:
-            self.a4coordinates.append(Ruler.calc_fourth_point_with_lines(self.corners_data))
+            if fourth_point_method == "parallels":
+                self.a4coordinates.append(self.get_fourth_point(self.a4coordinates))
+            elif fourth_point_method == "lines":
+                self.a4coordinates.append(Ruler.calc_fourth_point_with_lines(self.corners_data))
         self.transformation = Ruler.my_four_point_transform(self.a4coordinates)
         src = np.array([self.a4coordinates]).astype(np.float32)
         self.a4coordinates = cv2.perspectiveTransform(src, self.transformation)
 
-        print( self.a4coordinates )
-        sideA = math.dist(self.a4coordinates[0], self.a4coordinates[1])
-        sideB = math.dist(self.a4coordinates[0], self.a4coordinates[2])
+        sideA = math.dist(a4_data[0][0], a4_data[0][1])
+        sideB = math.dist(a4_data[0][0], a4_data[0][2])
         if sideA > sideB:
             self.longerSide = sideA
             self.shorterSide = sideB
