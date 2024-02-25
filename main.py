@@ -7,7 +7,7 @@ import json
 from display import threshAndEdges
 from operations import seperateShapes, findA4, rescaleImage
 from drawing import drawPoints
-from measure import Ruler
+from ruler import Ruler
 
 start = None
 ruler = None
@@ -69,10 +69,11 @@ for imageName in images:
     cv2.namedWindow("Image")
     cv2.setMouseCallback("Image", draw_circle)
     if a4candidate is not None:
-        drawPoints(a4candidate, image, (255, 0, 0))
-        warped, transformation = my_four_point_transform(image, a4candidate)
+        drawPoints(a4candidate[0], image, (255, 0, 0))
+        
+        ruler = Ruler(a4candidate)
+        warped = cv2.warpPerspective(image, ruler.transformation, (image.shape[0] * 2, image.shape[1] * 2))
         cv2.imshow("Warped", rescaleImage(25, warped))
-        ruler = Ruler(a4candidate, transformation)
 
         while(1):
             cv2.imshow("Image", image)

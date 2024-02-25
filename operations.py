@@ -53,10 +53,10 @@ def findA4(image):
 
     if len(a4candidates) > 0:
         # drawing potential A4 corners
-        a4candidates = sorted(a4candidates, key=lambda x: checkSize(x[0], x[1], x[2]), reverse=True)
+        a4candidates = sorted(a4candidates, key=lambda x: checkSize(x[0][0], x[0][1], x[0][2]), reverse=True)
         coloredImage = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         for points in a4candidates:
-            drawA4FromThreeCorners(points, coloredImage)
+            drawA4FromThreeCorners(points[0], coloredImage)
 
         return a4candidates[0]
     return None

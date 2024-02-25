@@ -118,9 +118,10 @@ def checkIfIsA4(contour, originalImage):
     #         cv2.imshow("candidates", rescaleImage(25, coloredImage))
     #         cv2.waitKey()
     if len(candidates) > 0:
+        corner_data = [corners[candidates[0][0]], corners[candidates[0][1]], corners[candidates[0][2]]]
         print(f"points: [{corners[candidates[0][0]]}, {corners[candidates[0][1]]}, {corners[candidates[0][2]]}] ")
         # convert result to np.array as rest of the code needs it
-        return [np.array(x) for x in candidates[0]]
+        return [np.array(x) for x in candidates[0]], corner_data
     return None
 
 
