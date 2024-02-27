@@ -6,7 +6,6 @@ from processing import *
 import json
 from display import threshAndEdges
 from operations import seperateShapes, findA4, rescaleImage
-from drawing import drawPoints
 from ruler import Ruler
 
 start = None
@@ -22,7 +21,6 @@ def draw_circle(event, x, y, flags, param):
             end = (x, y)
             cv2.circle(image, end, 20, (255, 0, 0), -1)
             cv2.line(image, start, end, (255, 0, 0), 4)
-            arr = [start, end]
 
             length = ruler.measureLength(start, end)
             print(f"Zmierzono {length} mm")
@@ -68,17 +66,17 @@ for imageName in images:
     # shapesImage = seperateShapes(threshedImage)
     a4candidate = findA4(threshedImage)
 
-    cv2.namedWindow("Image")
-    cv2.setMouseCallback("Image", draw_circle)
-    if a4candidate is not None:
-        drawPoints(a4candidate, image, (255, 0, 0))
-        
+    if a4candidate is not None:   
         ruler = Ruler(a4candidate)
-        warped = cv2.warpPerspective(image, ruler.transformation, (image.shape[0] * 2, image.shape[1] * 2))
-        cv2.imshow("Warped", rescaleImage(25, warped))
+        cv2.namedWindow(imageName)
+        cv2.setMouseCallback(imageName, draw_circle)
+
+        # we can check how warped image looks like
+        # warped = cv2.warpPerspective(image, ruler.transformation, (image.shape[0] * 2, image.shape[1] * 2))
+        # cv2.imshow("Warped", rescaleImage(25, warped))
 
         while(1):
-            cv2.imshow("Image", image)
+            cv2.imshow(imageName, image)
             if cv2.waitKey(20) & 0xFF == 27:
                 break
         cv2.destroyAllWindows()    
