@@ -71,7 +71,7 @@ for imageName in images:
     cv2.namedWindow("Image")
     cv2.setMouseCallback("Image", draw_circle)
     if a4candidate is not None:
-        drawPoints(a4candidate[0], image, (255, 0, 0))
+        drawPoints(a4candidate["corners"], image, (255, 0, 0))
         
         ruler = Ruler(a4candidate, args["fourth_point"])
         warped = cv2.warpPerspective(image, ruler.transformation, (image.shape[0] * 2, image.shape[1] * 2))

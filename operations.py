@@ -41,9 +41,9 @@ def findA4(image):
         approximations.append(approx)
         
         # Check if contour is A4
-        a4corners = checkIfIsA4(approx, image)
-        if a4corners is not None:
-            a4candidates.append(a4corners)
+        a4corners_data = checkIfIsA4(approx, image)
+        if a4corners_data is not None:
+            a4candidates.append(a4corners_data)
 
     # drawing contour approximations
     width, height = image.shape
@@ -53,10 +53,10 @@ def findA4(image):
 
     if len(a4candidates) > 0:
         # drawing potential A4 corners
-        a4candidates = sorted(a4candidates, key=lambda x: checkSize(x[0][0], x[0][1], x[0][2]), reverse=True)
+        a4candidates = sorted(a4candidates, key=lambda x: checkSize(x["corners"][0], x["corners"][1], x["corners"][2]), reverse=True)
         coloredImage = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         for points in a4candidates:
-            drawA4FromThreeCorners(points[0], coloredImage)
+            drawA4FromThreeCorners(points["corners"], coloredImage)
 
         return a4candidates[0]
     return None

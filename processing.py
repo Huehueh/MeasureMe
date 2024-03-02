@@ -99,7 +99,8 @@ def doImageProcessing(image, points, size):
         #     cv2.drawContours(image, [contour], -1, (0, 255, 0), 3)
         cv2.drawContours(approxImage, [approx], -1, (255, 0, 0), 3)
 
-        corners = checkIfIsA4(approx)
+        a4data = checkIfIsA4(approx)
+        corners = a4data["corners"]
         if corners is not None:
             # for p in corners:
             # cv2.circle(image, p, 10, (255, 100, 100), 2)

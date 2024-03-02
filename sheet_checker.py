@@ -72,18 +72,21 @@ def checkWhiteSpace(grayImage, corner, a, b) -> bool:
     print("checkWhiteSpace", whitness)
     return whitness
 
-def isCorner(contour, index):
+def getCorner(contour, index):
     first = len(contour) - 1 if index == 0 else index - 1
     last = 0 if index == len(contour) - 1 else index + 1
-    return checkPerpendicular(contour[first][0], contour[index][0], contour[last][0]), [contour[first][0].tolist(), contour[index][0].tolist(), contour[last][0].tolist()]
+    return [contour[first][0].tolist(), contour[index][0].tolist(), contour[last][0].tolist()]
+
+def isCorner(corner):
+    return checkPerpendicular(corner[0], corner[1], corner[2])
 
 def getAllCorners(contour):
     corners = {}
     for i in range(len(contour)):
-        corner, points = isCorner(contour, i)
-        if corner:
+        corner_points = getCorner(contour, i)
+        if isCorner(corner_points):
             # we need tuple instead od np.array because np.array is not hashable
-            corners[tuple(contour[i][0])] = points
+            corners[tuple(contour[i][0])] = corner_points
     return corners
 
 def getA4Candidates(corners) -> list:
@@ -121,11 +124,8 @@ def checkIfIsA4(contour, originalImage):
         corner_data = [corners[candidates[0][0]], corners[candidates[0][1]], corners[candidates[0][2]]]
         print(f"points: [{corners[candidates[0][0]]}, {corners[candidates[0][1]]}, {corners[candidates[0][2]]}] ")
         # convert result to np.array as rest of the code needs it
-        return [np.array(x) for x in candidates[0]], corner_data
+        return {"corners": [np.array(x) for x in candidates[0]], "corner_data": corner_data}
     return None
-
-
-
 
 # used?
 def calculateRatio(corners):
