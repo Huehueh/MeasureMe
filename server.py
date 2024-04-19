@@ -3,55 +3,79 @@ import tornado.web
 import os
 import cv2
 import numpy as np
+import json
 
 data_location = "server_data"
-base_url = "upload"
 
 
-class ImageWaiter(tornado.web.StaticFileHandler):
-    def parse_url_path(self, url_path: str) -> str:
-        if not url_path or url_path.endswith('/'):
-            url_path = url_path + base_url
-        return url_path
+class FilePathGenerator:
+    def __init__(self, name):
+        self.name = name
+        self.directory = self.__extract_directory()
+        self.path = self.__make_path()
+
+    def save_input_file(self, data):
+        self.__save_file(self.get_input_path(), data)
+
+    def get_input_path(self):
+        return os.path.join(self.path, self.name)
+
+    def __save_file(self, filepath, data):
+        if not os.path.exists(data_location):
+            os.mkdir(data_location)
+        if not os.path.exists(self.path):
+            os.mkdir(self.path)
+        with open(filepath, "wb") as f:
+            f.write(data)
+
+    def __extract_directory(self):
+        directory, _ = os.path.splitext(self.name)
+        return directory
+
+    def __make_path(self):
+        return os.path.join(data_location, self.directory)
 
 
-class MeasureHandler(tornado.web.RequestHandler):
+class UploadHandler(tornado.web.RequestHandler):
     def get(self):
         self.write("Wyślij mi obrazek")
 
     def post(self):
-        print("no elo")
+        print("nowy obrazek!")
+
         for field_name, files in self.request.files.items():
             for info in files:
                 filename, content_type = info["filename"], info["content_type"]
                 body = info["body"]
-                print('POST "%s" "%s" %d bytes', filename, content_type, len(body))
-                self.__save_file(filename, body)
+                print(f'nazywa się {filename} i ma {len(body)} bajtów  content type to {content_type}')
+                path_generator = FilePathGenerator(filename)
+                path_generator.save_input_file(body)
                 image = cv2.imdecode(np.frombuffer(body, np.uint8), cv2.IMREAD_COLOR)
+                self.write({"corners": [[10, 20], [30, 40], [50, 60], [70, 80]], "id": filename})
+                return
 
-        self.write({"corners": [[10, 20], [30, 40], [50, 60], [70, 80]]})
 
-    def __make_base_path(self, name):
-        base_name, _ = os.path.splitext(name)
-        return os.path.join(data_location, base_name)
-
-    def __save_file(self, name, data):
-        # extract timestamp of taking picture and use it as identificator
-        if not os.path.exists(data_location):
-            os.mkdir(data_location)
-        base_image_path = self.__make_base_path(name)
-        if not os.path.exists(base_image_path):
-            os.mkdir(base_image_path)
-        image_path = os.path.join(base_image_path, name)
-        with open(image_path, "wb") as f:
-            f.write(data)
+class MeasureHandler(tornado.web.RequestHandler):
+    def post(self):
+        print("pomiary ")
+        data = json.loads(self.request.body)
+        print(data)
+        if 'id' in data:
+            print(f"id: {data['id']}")
+        if 'coordinates' in data:
+            print(f"coordinates: {data['coordinates']}")
+        # here will read file names "base" from './server_data/id' directory then
+        # call measurement by coordinates to generate result
+        result = 42
+        self.write({"measurement": result})
 
 
 def make_app():
     path_to_serve = os.path.join(os.getcwd(), data_location)
     return tornado.web.Application([
-        (r"/"+base_url, MeasureHandler),
-        (r"/image/(.*)", ImageWaiter, {'path': path_to_serve}),
+        (r"/upload", UploadHandler),
+        (r"/measure", MeasureHandler),
+        (r"/image/(.*)", tornado.web.StaticFileHandler, {'path': path_to_serve}),
     ])
 
 
