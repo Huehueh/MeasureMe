@@ -6,15 +6,16 @@ import random as rng
 from sheet_checker import checkIfIsA4, checkSize
 from drawing import drawA4FromThreeCorners, drawPoints
 
-def findAllContours(image):
+
+def findAllContours(image, use_imshow):
     width, height = image.shape
     contours = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
-
-    contoursImage = np.zeros((width, height, 3),"uint8")
-    cv2.drawContours(contoursImage, contours, -1, (0, 255, 0), 3)
-    cv2.imshow("All contours", rescaleImage(25, contoursImage))
+    if use_imshow:
+        contoursImage = np.zeros((width, height, 3),"uint8")
+        cv2.drawContours(contoursImage, contours, -1, (0, 255, 0), 3)
+        cv2.imshow("All contours", rescaleImage(25, contoursImage))
     return contours
 
 
@@ -27,11 +28,11 @@ def approximateContour(contour):
     return approx
 
 
-def findA4(image):
+def findA4(image, use_imshow):
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
-    cnts = findAllContours(image)
+    cnts = findAllContours(image, use_imshow)
     a4candidates = []
     approximations = []
     for contour in cnts:        
@@ -46,17 +47,18 @@ def findA4(image):
             a4candidates.append(a4corners_data)
 
     # drawing contour approximations
-    width, height = image.shape
-    approxImage = np.zeros((width, height, 3),"uint8")
-    cv2.drawContours(approxImage, approximations, -1, (255, 0, 0), 8)  
-    cv2.imshow("Contours approximations", rescaleImage(25, approxImage))
+    if use_imshow:
+        width, height = image.shape
+        approxImage = np.zeros((width, height, 3),"uint8")
+        cv2.drawContours(approxImage, approximations, -1, (255, 0, 0), 8)
+        cv2.imshow("Contours approximations", rescaleImage(25, approxImage))
 
     if len(a4candidates) > 0:
         # drawing potential A4 corners
         a4candidates = sorted(a4candidates, key=lambda x: checkSize(x["corners"][0], x["corners"][1], x["corners"][2]), reverse=True)
-        coloredImage = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-        for points in a4candidates:
-            drawA4FromThreeCorners(points["corners"], coloredImage)
+        # coloredImage = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        # for points in a4candidates:
+        #     drawA4FromThreeCorners(points["corners"], coloredImage)
 
         return a4candidates[0]
     return None

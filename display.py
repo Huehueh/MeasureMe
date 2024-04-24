@@ -10,8 +10,36 @@ thr_window = "threshold"
 
 scale_percent = 25 # percent of original size
 
-def nothing(x): 
+
+def nothing(x):
     pass
+
+
+def thresh_and_edges_headless(image, input_blur_size=3, canny_thr1=5, canny_thr2=52):
+    if len(image.shape) == 3:
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray_image = image
+
+    blur_size = 2 * input_blur_size + 1
+    blur_image = cv2.GaussianBlur(gray_image, (blur_size, blur_size), 0)
+
+    threshold = 100
+    _, threshold_image = cv2.threshold(blur_image, threshold, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    contours_image = cv2.Canny(blur_image, canny_thr1, canny_thr2)
+
+    dilate_size = 1
+    element = cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE,
+        (2 * dilate_size + 1, 2 * dilate_size + 1),
+        (dilate_size, dilate_size),
+    )
+    contours_image = cv2.dilate(contours_image, element, iterations=3)
+    contours_image = 255 - contours_image
+
+    return cv2.bitwise_and(threshold_image, contours_image)
+
 
 def threshAndEdges(image):
     if len(image.shape) == 3:
