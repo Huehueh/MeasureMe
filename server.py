@@ -76,26 +76,23 @@ class UploadHandler(tornado.web.RequestHandler):
 class MeasureHandler(tornado.web.RequestHandler):
     def post(self):
         print("pomiary ")
-        data = json.loads(self.request.body)
-        print(data)
-        if 'id' in data:
-            print(f"id: {data['id']}")
-        if 'coordinates' in data:
-            print(f"coordinates: {data['coordinates']}")
-        path_generator = FilePathGenerator(data['id'])
-        data_path = path_generator.get_meta_path()
-        if os.path.exists(data_path):
-            with open(data_path, 'r') as f:
-                data = json.load(f)
-                data['corners'] = [np.array(a) for a in data['corners']]
-                ruler = Ruler(data)
-                result = ruler.measureLength(data['coordinates'])
-                self.write({"measurement": result})
-                return
-        # here will read file names "base" from './server_data/id' directory then
-        # call measurement by coordinates to generate result
-        result = 42
-        self.write({"measurement": result})
+        inputdata = json.loads(self.request.body)
+        print(inputdata)
+        if 'id' in inputdata:
+            print(f"id: {inputdata['id']}")
+            if 'coordinates' in inputdata:
+                print(f"coordinates: {inputdata['coordinates']}")
+                path_generator = FilePathGenerator(inputdata['id'])
+                metadata_path = path_generator.get_meta_path()
+                if os.path.exists(metadata_path):
+                    with open(metadata_path, 'r') as f:
+                        metadata = json.load(f)
+                        metadata['corners'] = [np.array(a) for a in metadata['corners']]
+                        ruler = Ruler(metadata)
+                        result = ruler.measureLength(*inputdata['coordinates'])
+                        self.write({"measurement": result})
+                        return
+        self.write({"measurement": -1})
 
 
 def make_app():
