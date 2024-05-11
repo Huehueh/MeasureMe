@@ -65,12 +65,12 @@ class UploadHandler(tornado.web.RequestHandler):
                 threshed_image = thresh_and_edges_headless(image)
                 a4candidate = findA4(threshed_image, use_imshow=False)
                 if a4candidate is None:
-                    self.write({"corners": [[0, 0], [0, 0], [0, 0], [0, 0]], "id": filename})
+                    self.write({"a4found": False, "id": "-1"})
                     return
                 print(a4candidate)
                 a4candidate['corners'] = [a.tolist() for a in a4candidate['corners']]
                 path_generator.save_meta_file(a4candidate)
-                self.write({"corners": a4candidate['corners'], "id": filename})
+                self.write({"a4found": True, "corners": a4candidate['corners'], "id": filename})
                 return
 
 
