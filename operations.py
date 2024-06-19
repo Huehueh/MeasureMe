@@ -28,11 +28,12 @@ def approximateContour(contour):
     return approx
 
 
-def findA4(image, use_imshow):
+def findA4(image, file_saver=None):
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
-    cnts = findAllContours(image, use_imshow)
+    cnts = findAllContours(image, file_saver is None)
+    print(f"Found {len(cnts)} contours on image")
     a4candidates = []
     approximations = []
     for contour in cnts:        
@@ -45,13 +46,15 @@ def findA4(image, use_imshow):
         a4corners_data = checkIfIsA4(approx, image)
         if a4corners_data is not None:
             a4candidates.append(a4corners_data)
-
+    print(len(a4candidates), "candidates")
     # drawing contour approximations
-    if use_imshow:
-        width, height = image.shape
-        approxImage = np.zeros((width, height, 3),"uint8")
-        cv2.drawContours(approxImage, approximations, -1, (255, 0, 0), 8)
+    width, height = image.shape
+    approxImage = np.zeros((width, height, 3),"uint8")
+    cv2.drawContours(approxImage, approximations, -1, (255, 0, 0), 8)
+    if file_saver is None:
         cv2.imshow("Contours approximations", rescaleImage(25, approxImage))
+    else:
+        file_saver.save("Contours_approximations", approxImage)
 
     if len(a4candidates) > 0:
         # drawing potential A4 corners

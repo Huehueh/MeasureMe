@@ -18,6 +18,11 @@ class FilePathGenerator:
         self.directory = self.__extract_directory()
         self.path = self.__make_path()
 
+    def save(self, name, image):
+        path = os.path.join(self.path, name+".jpg")
+        print(f"zapisuje do {path}")
+        cv2.imwrite(path, image)
+
     def save_input_file(self, data):
         self.__save_file(self.get_input_path(), data)
 
@@ -49,7 +54,13 @@ class FilePathGenerator:
 
 class UploadHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("Wyślij mi obrazek")
+        images = os.listdir(data_location)
+        result = {}
+        for img in images:
+            path = os.path.join(data_location, img)
+            data = os.listdir(path)
+            result[img] = data
+        self.write(result)
 
     def post(self):
         print("nowy obrazek!")
@@ -62,8 +73,9 @@ class UploadHandler(tornado.web.RequestHandler):
                 path_generator = FilePathGenerator(filename)
                 path_generator.save_input_file(body)
                 image = cv2.imdecode(np.frombuffer(body, np.uint8), cv2.IMREAD_COLOR)
+                print("Image decoded")
                 threshed_image = thresh_and_edges_headless(image)
-                a4candidate = findA4(threshed_image, use_imshow=False)
+                a4candidate = findA4(threshed_image, file_saver=path_generator)
                 if a4candidate is None:
                     self.write({"a4found": False, "id": "-1"})
                     return
@@ -94,7 +106,6 @@ class MeasureHandler(tornado.web.RequestHandler):
                         self.write({"measurement": result})
                         return
         self.write({"measurement": -1})
-
 
 def make_app():
     path_to_serve = os.path.join(os.getcwd(), data_location)

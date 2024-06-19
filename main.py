@@ -66,7 +66,7 @@ for imageName in images:
         break
     threshedImage = threshAndEdges(image)
     # shapesImage = seperateShapes(threshedImage)
-    a4candidate = findA4(threshedImage, use_imshow=True)
+    a4candidate = findA4(threshedImage)
 
     cv2.namedWindow("Image")
     cv2.setMouseCallback("Image", draw_circle)
