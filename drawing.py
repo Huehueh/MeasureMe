@@ -1,5 +1,5 @@
 import cv2
-
+from typing import List
 
 def drawA4FromThreeCorners(corners, image):
     if corners is None or len(corners) != 3:
@@ -8,6 +8,7 @@ def drawA4FromThreeCorners(corners, image):
     cv2.line(image, corners[0], corners[2], (0, 255, 0), 10)
 
 
-def drawPoints(points, image, color):
-    for point in points:
-        cv2.circle(image, point, 25, color, cv2.FILLED)
+def drawPoints(a4: List[List], image, color):
+    for point in a4:
+        cv2.circle(image, (point[0], point[1]), 25, color, cv2.FILLED)
+        

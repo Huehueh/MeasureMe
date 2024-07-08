@@ -3,18 +3,19 @@ import numpy as np
 import random
 from utils import rescaleImage
 import random as rng
-from sheet_checker import checkIfIsA4, checkSize
+from sheet_checker import getA4Candidates, checkSize
 from drawing import drawA4FromThreeCorners, drawPoints
 
-def findAllContours(image):
+def findAllContours(image, use_imshow):
     width, height = image.shape
     contours = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
-
-    contoursImage = np.zeros((width, height, 3),"uint8")
-    cv2.drawContours(contoursImage, contours, -1, (0, 255, 0), 3)
-    cv2.imshow("All contours", rescaleImage(25, contoursImage))
+    print("find contours")
+    if use_imshow:
+        contoursImage = np.zeros((width, height, 3),"uint8")
+        cv2.drawContours(contoursImage, contours, -1, (0, 255, 0), 3)
+        cv2.imshow("All contours", rescaleImage(25, contoursImage))
     return contours
 
 
@@ -27,38 +28,44 @@ def approximateContour(contour):
     return approx
 
 
-def findA4(image):
+def findA4(image, use_imshow):
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    width, height = image.shape
     
-    cnts = findAllContours(image)
+    cnts = findAllContours(image, use_imshow)
     a4candidates = []
     approximations = []
-    for contour in cnts:        
+    for contour in cnts[0:20]:
         approx = approximateContour(contour)
         if approx is None:
             continue
         approximations.append(approx)
         
         # Check if contour is A4
-        a4corners = checkIfIsA4(approx, image)
-        if a4corners is not None:
-            a4candidates.append(a4corners)
+        corners, contour_candidates = getA4Candidates(approx, image)
+        print(f"Corners {corners}; candidates {contour_candidates}")
+        if contour_candidates is not None:
+            a4candidates += contour_candidates
+            break
 
-    # drawing contour approximations
-    width, height = image.shape
-    approxImage = np.zeros((width, height, 3),"uint8")
-    cv2.drawContours(approxImage, approximations, -1, (255, 0, 0), 8)  
-    cv2.imshow("Contours approximations", rescaleImage(25, approxImage))
+        if use_imshow:
+            approxImage = np.zeros((width, height, 3),"uint8")
+            cv2.drawContours(approxImage, [approx], -1, (255, 0, 0), 8)
+            if corners is not None:
+                drawPoints(corners, approxImage, (155, 0, 0))
+            if contour_candidates is not None:
+                for candidates in contour_candidates:
+                    drawPoints(candidates, approxImage, (255, 200, 100))
+            cv2.imshow("approx", rescaleImage(25, approxImage))
+            cv2.waitKey()
+
+    # a4candidates = sorted(a4candidates, key=lambda x: checkSize(x["corners"][0], x["corners"][1], x["corners"][2]), reverse=True)
 
     if len(a4candidates) > 0:
-        # drawing potential A4 corners
-        a4candidates = sorted(a4candidates, key=lambda x: checkSize(x[0], x[1], x[2]), reverse=True)
-        a4 = a4candidates[0]
-        coloredImage = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)                
-        drawPoints(a4, coloredImage, (255, 0, 0))
-        cv2.imshow("A4", rescaleImage(25, coloredImage))
-        return a4
+        print(f"a4 candidates {a4candidates}")
+        res = a4candidates[0]
+        return res
     return None
 
 

@@ -1,5 +1,7 @@
 import cv2
-from sheet_checker import checkIfIsA4
+#from transform import my_four_point_transform
+from sheet_checker import getA4Candidates
+
 import math
 import numpy as np
 
@@ -97,8 +99,9 @@ def doImageProcessing(image, points, size):
         approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
         #     cv2.drawContours(image, [contour], -1, (0, 255, 0), 3)
         cv2.drawContours(approxImage, [approx], -1, (255, 0, 0), 3)
+        data = getA4Candidates(approx)
+        corners = a4data["corners"]
 
-        corners = checkIfIsA4(approx)
         if corners is not None:
             # for p in corners:
             # cv2.circle(image, p, 10, (255, 100, 100), 2)

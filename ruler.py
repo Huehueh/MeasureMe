@@ -8,7 +8,7 @@ class Ruler:
     shorterMm = 210
     transformation = None
 
-    def __init__(self, a4coordinates:[]):
+    def __init__(self, a4coordinates):
         self.a4coordinates = a4coordinates
         if len(self.a4coordinates) == 3:
             self.a4coordinates.append(self.get_fourth_point(self.a4coordinates))
@@ -60,7 +60,7 @@ class Ruler:
             point[1] -= 2000
         # obtain a consistent order of the points and unpack them
         # individually
-        print(pts)
+        print(f"Points {pts}")
         rect = Ruler.order_points(pts)
         print(rect)
         (tl, tr, br, bl) = rect

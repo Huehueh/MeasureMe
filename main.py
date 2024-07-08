@@ -7,6 +7,7 @@ import json
 from display import threshAndEdges
 from operations import seperateShapes, findA4, rescaleImage
 from ruler import Ruler
+from drawing import drawPoints
 
 start = None
 ruler = None
@@ -62,18 +63,24 @@ for imageName in images:
     if image is None:
         print("NO IMAGE")
         break
+    use_imshow = True
     threshedImage = threshAndEdges(image)
     # shapesImage = seperateShapes(threshedImage)
-    a4candidate = findA4(threshedImage)
+    a4candidate = findA4(threshedImage, use_imshow)
+    if use_imshow:        
+        drawPoints(a4candidate, image, (1,1,1))
+        cv2.imshow("Contours approximations", rescaleImage(25, image))
+        cv2.waitKey()
 
-    if a4candidate is not None:   
+    cv2.namedWindow("Image")
+    cv2.setMouseCallback("Image", draw_circle)
+    if a4candidate is not None:
+        # drawPoints(a4candidate["corners"], image, (255, 0, 0))
+        print(f"a4 candidate {a4candidate}")
+        
         ruler = Ruler(a4candidate)
-        cv2.namedWindow(imageName)
-        cv2.setMouseCallback(imageName, draw_circle)
-
-        # we can check how warped image looks like
-        # warped = cv2.warpPerspective(image, ruler.transformation, (image.shape[0] * 2, image.shape[1] * 2))
-        # cv2.imshow("Warped", rescaleImage(25, warped))
+        warped = cv2.warpPerspective(image, ruler.transformation, (image.shape[0] * 2, image.shape[1] * 2))
+        cv2.imshow("Warped", rescaleImage(25, warped))
 
         while(1):
             cv2.imshow(imageName, image)

@@ -24,7 +24,7 @@ def threshAndEdges(image):
     cv2.createTrackbar("blur kernel size", result_image, 3, 7, nothing)
     cv2.setTrackbarMin("blur kernel size", result_image, 3)
 
-    # cv2.createTrackbar("threshold", title_window, 200, 255, nothing)
+    cv2.createTrackbar("threshold", thr_window, 150, 255, nothing)
 
     cv2.createTrackbar("canny thr1", canny_window, 5, 255, nothing)
     cv2.createTrackbar("canny thr2", canny_window, 52, 255, nothing)
@@ -39,9 +39,10 @@ def threshAndEdges(image):
         blurSize = 2*blurSize+1
         blur_image = cv2.GaussianBlur(gray_image, (blurSize, blurSize), 0)
 
-        # threshold = cv2.getTrackbarPos("threshold", title_window) 
-        threshold = 100
-        _, thresholdedImage = cv2.threshold(blur_image, threshold, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) 
+        threshold = cv2.getTrackbarPos("threshold", thr_window) 
+        # threshold = 100
+        # _, thresholdedImage = cv2.threshold(blur_image, threshold, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, thresholdedImage = cv2.threshold(blur_image, threshold, 255, cv2.THRESH_BINARY)
         # cv2.createButton('do_threshold', lambda , [40, 50], 1, 0)
 
         thr1 = cv2.getTrackbarPos("canny thr1", canny_window)

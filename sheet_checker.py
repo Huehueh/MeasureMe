@@ -18,7 +18,8 @@ def checkPerpendicular(p1, p2, p3):
         m1 = (p1[1] - p2[1]) / (p1[0] - p2[0])
         m2 = (p3[1] - p2[1]) / (p3[0] - p2[0])
         degrees = math.degrees(abs(math.atan(m1) - math.atan(m2)))
-    perpendicular = degrees > 80 and degrees < 100
+    perpendicular = degrees > 75 and degrees < 105
+    print(f"Degrees {degrees} perpendicular {perpendicular}")
     return perpendicular
 
 
@@ -44,7 +45,7 @@ def checkRatio(corner, a, b):
     r2 = l2 / l1
     ratio = max(r1, r2)
     targetRatio = 297 / 210
-    offset = 0.02 #0.05
+    offset = 0.05 #0.02
 
     result = ratio >= (1 - offset) * targetRatio and ratio <= (1 + offset) * targetRatio
     # print("checkRatio", result, "current ratio", ratio, "target ratio", targetRatio)
@@ -72,55 +73,80 @@ def checkWhiteSpace(grayImage, corner, a, b) -> bool:
     print("checkWhiteSpace", whitness)
     return whitness
 
-def isCorner(contour, index):
+def getCorner(contour, index):
     first = len(contour) - 1 if index == 0 else index - 1
     last = 0 if index == len(contour) - 1 else index + 1
-    return checkPerpendicular(contour[first][0], contour[index][0], contour[last][0])
+    return [contour[first][0].tolist(), contour[index][0].tolist(), contour[last][0].tolist()]
 
-def getAllCorners(contour):
+def isCorner(corner):
+    print(f"isCorner {corner}")
+    return checkPerpendicular(corner[0], corner[1], corner[2])
+
+
+def getAllCorners(contour) -> list:
     corners = []
     for i in range(len(contour)):
-        if isCorner(contour, i):
+        if isCorner(getCorner(contour, i)):
             corners.append(contour[i][0])
     return corners
 
-def getA4Candidates(corners) -> list:
+
+def getA4CandidatesFromCorners(corners:list) -> list:
     cornersCandidates = []
     cornersNum = len(corners)
     for i in range(cornersNum):
         for j in range(i + 1, cornersNum):
             for k in range(j + 1, cornersNum):
+                # print(f"Checking {corners[i]} {corners[j]}  {corners[k]}")
                 orthogonalPoints = checkOrthogonal(corners[i], corners[j], corners[k])
                 if orthogonalPoints is not None and checkRatio(*orthogonalPoints):
+                    print(f"Sugeruje ze {orthogonalPoints} to A4")
                     cornersCandidates.append(orthogonalPoints)
+                    print(f"OK {cornersCandidates}")
+                else:
+                    print("No")
     return cornersCandidates
 
 
 def checkSize(p1, p2, p3):
     return math.dist(p1, p2) * math.dist(p2, p3)
 
-def checkIfIsA4(contour, originalImage):
-    # print("checkIfIsA4")
+def sortByWhiteSpaceInside(corners, image):
+    if len(corners) > 1:
+        corners = sorted(corners, key=lambda x: checkWhiteSpace(image, x[0], x[1], x[2]), reverse=True)
+    return corners
+
+
+def getA4Candidates(contour, originalImage):
     if len(contour) < 3:
         return None
+    print("getA4Candidates")
 
     corners = getAllCorners(contour)
-    candidates = getA4Candidates(corners)
-    if len(candidates) > 1:
-        candidates = sorted(candidates, key=lambda x: checkWhiteSpace(originalImage, x[0], x[1], x[2]), reverse=True)
-    
+    candidates = getA4CandidatesFromCorners(corners)
+    # sortedCandidates = sortByWhiteSpaceInside(candidates, originalImage)
+    print(f"mamy {len(candidates)} kandydatów")
+
+    return corners, candidates
+
+
+def getCandidatesAsCornerData(corners, candidates) -> dict:
+    if len(candidates) == 0:
+        return None
+    corner_data = [corners[candidates[0][0]], corners[candidates[0][1]], corners[candidates[0][2]]]
+    print(f"points: [{corners[candidates[0][0]]}, {corners[candidates[0][1]]}, {corners[candidates[0][2]]}] ")
+    # convert result to np.array as rest of the code needs it
+    return {"corners": [np.array(x) for x in candidates[0]], "corner_data": corner_data}
+
+
     # if len(candidates) > 0:        
     #     for points in candidates:
     #         coloredImage = cv2.cvtColor(originalImage, cv2.COLOR_GRAY2BGR)
     #         drawPoints(points, coloredImage, (255, 200, 100))
-    #         cv2.imshow("candidates", rescaleImage(25, coloredImage))
-    #         cv2.waitKey()
-    if len(candidates) > 0:
-        return candidates[0]
-    return None
+    #         cv2.imshow("a4 candidates", rescaleImage(25, coloredImage))
+    #         # cv2.waitKey()
 
-
-
+    # return None
 
 # used?
 def calculateRatio(corners):
